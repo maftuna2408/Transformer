@@ -40,3 +40,25 @@ class DataLoader:
                                                                               device=device)
         print('dataset initializing done')
         return train_iterator, valid_iterator, test_iterator
+    # util/data_loader.py faylida eng pastga qo‘shing:
+if __name__ == "__main__":
+    from tokenizer import Tokenizer
+
+    tokenizer = Tokenizer()
+    loader = DataLoader(
+        ext=('.en', '.de'),
+        tokenize_en=tokenizer.tokenize_en,
+        tokenize_de=tokenizer.tokenize_de,
+        init_token='<sos>',
+        eos_token='<eos>'
+    )
+
+    print("➡️ loader initialized...")
+
+    train, val, test = loader.make_dataset()
+    print("✅ Dataset loaded!")
+
+    print(f"Train examples: {len(train)}")
+    print(f"Val examples: {len(val)}")
+    print(f"Test examples: {len(test)}")
+
