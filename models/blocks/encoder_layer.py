@@ -5,6 +5,20 @@ from models.layers.multi_head_attention import MultiHeadAttention
 from models.layers.position_wise_feed_forward import PositionWiseFeedForward
 
 class EncoderLayer(nn.Module):
+    """
+    A single Transformer encoder layer.
+
+    Consists of:
+        - Multi-head self-attention
+        - Layer normalization and residual connection
+        - Position-wise feedforward network
+
+    Args:
+        d_model (int): Dimension of embedding/model
+        ffn_hidden (int): Hidden layer size in feedforward network
+        n_head (int): Number of attention heads
+        drop_prob (float): Dropout probability
+    """
 
     def __init__(self, d_model, ffn_hidden, n_head, drop_prob):
         super(EncoderLayer, self).__init__()

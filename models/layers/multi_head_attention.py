@@ -1,62 +1,51 @@
+import torch
 from torch import nn
 
-from models.layers.scale_dot_product_attention import ScaleDotProductAttention 
+from models.layers.scale_dot_product_attention import ScaleDotProductAttention
+
 
 class MultiHeadAttention(nn.Module):
+    """
+    Multi-head attention mechanism as defined in the Transformer.
 
+    Projects Q, K, V into multiple heads, performs scaled dot-product attention,
+    and then concatenates the results into a single output.
+
+    Args:
+        d_model (int): Input and output dimensionality.
+        n_head (int): Number of attention heads.
+    """
     def __init__(self, d_model, n_head):
-        super(MultiHeadAttention, self).__init__()
-        self.n_head = n_head 
+        super().__init__()
+        self.n_head = n_head
+        self.d_model = d_model
         self.attention = ScaleDotProductAttention()
+
         self.w_q = nn.Linear(d_model, d_model)
         self.w_k = nn.Linear(d_model, d_model)
         self.w_v = nn.Linear(d_model, d_model)
         self.w_concat = nn.Linear(d_model, d_model)
 
-    def forward(self, q, k, v, mask = None):
-        # 1. dot product weight matrics 
-        q, k, v, = self.w_q(q), self.w_k(k), self.w_v(v)
+    def forward(self, q, k, v, mask=None):
+        q = self.split(self.w_q(q))
+        k = self.split(self.w_k(k))
+        v = self.split(self.w_v(v))
 
-        # 2. split tensor by number of heads
-        q, k, v = self.split(q), self.split(k), self.split(v)
-
-        # 3. do scale do product tp compute similarity
-        out, attention, = self.attention(q, k, v, mask = mask)
-
-        # 4, concat and pass linear layer 
+        out, attn = self.attention(q, k, v, mask)
         out = self.concat(out)
-        out = self.w_concat(out) 
+        out = self.w_concat(out)
+        return out
 
-        # 5. visualize attention map 
-        # TODO - we should implement visualization 
+    def split(self, x):
+        b, l, d = x.size()
+        h = self.n_head
+        d_h = d // h
+        x = x.view(b, l, h, d_h).transpose(1, 2)  # [batch, head, seq_len, d_tensor]
+        return x
 
-        return out 
-    
-    def split (self, tensor): 
-        """
-        split tensor by number of head
+    def concat(self, x):
+        b, h, l, d = x.size()
+        x = x.transpose(1, 2).contiguous().view(b, l, h * d)
+        return x
 
-        :param tensor: [batch_size, length, d_model]
-        :return: [batch_size, head, length, d_tensor]
-        """
-        batch_size, length, d_model = tensor.size()
-
-        d_tensor = d_model // self.n_head
-        d_tensor = tensor.view(batch_size, length, self.n_head, d_tensor).transpose(1, 2)
-        # it is similar with group convolution (split by number of heads) 
-
-        return tensor 
-    
-    def concat(self, tensor):
-        """
-        inverse function of self.split(tensor : torch.Tensor)
-
-        :param tensor: [batch_size, head, length, d_tensor]
-        :return: [batch_size, length, d_model]
-        """
-        batch_size, head, length, d_tensor = tensor.size()
-        d_model = head * d_tensor
-
-        tensor = tensor.transpose(1, 2).contiguous().view(batch_size, length, d_model)
-        return tensor
     

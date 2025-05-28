@@ -1,39 +1,30 @@
-import math 
-
-from torch import nn 
-
+import torch
+from torch import nn
+import math
 
 class ScaleDotProductAttention(nn.Module):
     """
-    compute scale dot product attention
+    Computes scaled dot-product attention.
 
-    Query : given sentence that we focused on (decoder)
-    Key : every sentence to check relationship with Qeury(encoder)
-    Value : every sentence same with Key (encoder)
+    Query, Key, and Value are 3 matrices used to calculate attention weights.
+    This is the core operation in self-attention and cross-attention.
+
+    Formula:
+        Attention(Q, K, V) = softmax(QK^T / sqrt(d_k)) * V
     """
-
     def __init__(self):
-        super(ScaleDotProductAttention, self).__init__()
-        self.softmax = nn.Softmax(dim = -1)
+        super().__init__()
+        self.softmax = nn.Softmax(dim=-1)
 
-    def forward(self, q, k, v, mask = None, e = 1e-12):
-        # input is 4 dimension tensor 
-        # [batch_size, head, length, d_tensor]
-        batch_size, head, length, d_tensor, = k.size()
+    def forward(self, q, k, v, mask=None, e=1e-12):
+        d_tensor = k.size(-1)
+        k_t = k.transpose(-2, -1)
+        score = torch.matmul(q, k_t) / math.sqrt(d_tensor)
 
-         # 1. dot product Query with Key^T to compute similarity
-        k_t = k.transpose(2, 3)  # transpose
-        score = (q @ k_t) / math.sqrt(d_tensor) # sacled dot product 
-
-        # 2. apply masking (opt)
         if mask is not None:
-            score = score.masked_fill(mask == 0, -1000)
+            score = score.masked_fill(mask == 0, -1e9)
 
-        # 3 pass them softmax to make [ 0, 1]
-        score = self.softmax(score)
+        attention = self.softmax(score)
+        out = torch.matmul(attention, v)
 
-        # 4. multiply with value 
-        v = score @ v
-
-        return v, score 
-    
+        return out, attention

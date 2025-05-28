@@ -5,6 +5,21 @@ from models.layers.multi_head_attention import MultiHeadAttention
 from models.layers.position_wise_feed_forward import PositionWiseFeedForward
 
 class DecoderLayer(nn.Module):
+    """
+    A single Transformer decoder layer.
+
+    Consists of:
+        - Masked multi-head self-attention
+        - Multi-head encoder-decoder attention
+        - Position-wise feedforward
+        - LayerNorm + residuals after each block
+
+    Args:
+        d_model (int): Model dimension
+        ffn_hidden (int): Hidden units in FFN
+        n_head (int): Number of attention heads
+        drop_prob (float): Dropout rate
+    """
 
     def __init__(self, d_model, ffn_hidden, n_head, drop_prob):
         super(DecoderLayer, self).__init__()

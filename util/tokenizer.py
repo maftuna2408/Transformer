@@ -1,20 +1,12 @@
 import spacy
 
-
 class Tokenizer:
-
     def __init__(self):
-        self.spacy_de = spacy.load('de_core_news_sm')
-        self.spacy_en = spacy.load('en_core_web_sm')
-
-    def tokenize_de(self, text):
-        """
-        Tokenizes German text from a string into a list of strings
-        """
-        return [tok.text for tok in self.spacy_de.tokenizer(text)]
+        self.spacy_en = spacy.load("en_core_web_sm")
+        self.spacy_tr = spacy.blank("tr")  # Blank Turkish tokenizer
 
     def tokenize_en(self, text):
-        """
-        Tokenizes English text from a string into a list of strings
-        """
-        return [tok.text for tok in self.spacy_en.tokenizer(text)]
+        return [tok.text.lower() for tok in self.spacy_en.tokenizer(text)]
+
+    def tokenize_tr(self, text):
+        return [tok.text.lower() for tok in self.spacy_tr.tokenizer(text)]
